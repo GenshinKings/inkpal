@@ -1,6 +1,6 @@
 {
   "name": "inkpal",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Ask your notes: vault Q&A with citations + writing assist that completes but never ghost-writes.",
   "main": "main.js",
   "license": "MIT",

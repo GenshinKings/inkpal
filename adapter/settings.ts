@@ -9,6 +9,7 @@ export interface InkPalSettings {
   model: string;
   temperature: number;
   topK: number;
+  voyageUrl: string;
 }
 
 export const DEFAULT_SETTINGS: InkPalSettings = {
@@ -17,6 +18,7 @@ export const DEFAULT_SETTINGS: InkPalSettings = {
   model: "glm-4.6",
   temperature: 0.7,
   topK: 6,
+  voyageUrl: '',
 };
 
 export class InkPalSettingTab extends PluginSettingTab {
@@ -29,6 +31,16 @@ export class InkPalSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl).setName("InkPal 笔伴").setHeading();
+
+    new Setting(containerEl)
+      .setName("voyage 助教地址（可选）")
+      .setDesc("填了就和 voyage 共用同一个助教（同一份记忆与教学法）；留空则只用下面的模型配置。例：http://127.0.0.1:7412")
+      .addText(t =>
+        t.setValue(this.plugin.settings.voyageUrl).onChange(async v => {
+          this.plugin.settings.voyageUrl = v.trim().replace(/\/+$/, "");
+          await this.plugin.saveSettings();
+        }),
+      );
 
     new Setting(containerEl)
       .setName("服务地址（OpenAI 兼容）")

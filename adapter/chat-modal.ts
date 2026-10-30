@@ -1,6 +1,7 @@
 import { Component, MarkdownRenderer, Modal, Notice } from "obsidian";
 import type { Hit } from "../engine/types.ts";
 import { chatComplete } from "../engine/llm.ts";
+import { makeCaller } from "./voyage.ts";
 import { runQa, type QaTurn } from "../engine/qa.ts";
 import type { InkPalPlugin } from "./main.ts";
 
@@ -158,9 +159,11 @@ export class ChatModal extends Modal {
     this.plugin.setStatus("thinking");
 
     try {
+      // 配了 voyage 就共用 voyage 的助教（同一份记忆/教学法），否则走自带模型
+      const caller = makeCaller(this.plugin.settings.voyageUrl);
       const wrapper: typeof chatComplete = (cfg, msgs, opts) => {
         const isQaCall = msgs[0]?.role === "system" && msgs[0].content.includes("问答助手");
-        return chatComplete(cfg, msgs, isQaCall ? { ...opts, onToken: t => this.onStreamToken(t) } : opts);
+        return caller(cfg, msgs, isQaCall ? { ...opts, onToken: t => this.onStreamToken(t) } : opts);
       };
       const result = await runQa(
         this.plugin.retriever(),

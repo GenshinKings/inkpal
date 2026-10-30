@@ -1,3 +1,8 @@
+## 0.2.0 — 2026-10-31
+
+- 新增 voyage 助教地址设置：填上就和 voyage 共用同一个助教（同一份学习者画像、长期记忆与教学法技能），插件只负责读笔记和显示结果；留空仍可用自带模型配置。
+- 问答与写作辅助的模型调用统一走 adapter/voyage.ts 的调用器。
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
