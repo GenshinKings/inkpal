@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import type { ChatMessage, LlmConfig } from "../engine/types.ts";
 import type { ChatOptions } from "../engine/llm.ts";
 import { chatComplete } from "../engine/llm.ts";
@@ -9,36 +10,31 @@ import { chatComplete } from "../engine/llm.ts";
  * 学习者画像、长期记忆、教学法全分裂。接上 voyage 之后两边是同一个助教，
  * 插件只负责读笔记、显示结果。
  *
+ * 为什么用 requestUrl 而不是 fetch：Obsidian 的渲染进程有 CORS 限制，
+ * 直连 localhost 会被浏览器安全策略拦成「Failed to fetch」。requestUrl 走主进程，不受同源限制。
+ *
  * 契约（voyage 侧 /api/inkpal/chat）：
  *   请求 {messages:[{role,content}]} → 响应 {reply, sharedTutor:true}
  * voyage 不支持流式，这里一次性回放：先 onToken(全文)，再返回。
  */
 export function voyageCaller(voyageUrl: string): typeof chatComplete {
   const base = voyageUrl.trim().replace(/\/+$/, "");
-  return async (cfg: LlmConfig, msgs: ChatMessage[], opts: ChatOptions = {}): Promise<string> => {
-    const payload = {
-      messages: msgs.map(m => ({ role: m.role, content: m.content })),
-    };
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 90_000);
-    try {
-      const res = await fetch(base + "/api/inkpal/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: opts.signal ?? controller.signal,
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error("voyage 助教返回 " + res.status + (text ? "：" + text.slice(0, 120) : ""));
-      }
-      const data = (await res.json()) as { reply?: string };
-      const reply = data.reply ?? "";
-      if (opts.onToken) opts.onToken(reply);
-      return reply;
-    } finally {
-      clearTimeout(timer);
+  return async (_cfg: LlmConfig, msgs: ChatMessage[], opts: ChatOptions = {}): Promise<string> => {
+    const res = await requestUrl({
+      url: base + "/api/inkpal/chat",
+      method: "POST",
+      contentType: "application/json",
+      body: JSON.stringify({ messages: msgs.map(m => ({ role: m.role, content: m.content })) }),
+      throw: false,
+    });
+    if (res.status >= 400) {
+      const text = typeof res.text === "string" ? res.text : "";
+      throw new Error("voyage 助教返回 " + res.status + (text ? "：" + text.slice(0, 160) : ""));
     }
+    const data = res.json as { reply?: string };
+    const reply = (data && data.reply) || "";
+    if (opts.onToken) opts.onToken(reply);
+    return reply;
   };
 }
 
