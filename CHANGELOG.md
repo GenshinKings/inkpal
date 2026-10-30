@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-30
+
+### Fixed
+
+- 修复插件无法加载：入口类缺少 `export default`，Obsidian 找不到插件类（报「插件加载失败」）。
+
+### Changed
+
+- package.json 移除 `"type": "module"`（会干扰本地以 CJS 校验 main.js 导出形状）；冒烟脚本改名 `.mts` 保持 ESM 直跑。该字段不随发布产物分发，不影响 Obsidian 本身。
+
 ## [0.1.0] - 2026-10-29
 
 ### Added

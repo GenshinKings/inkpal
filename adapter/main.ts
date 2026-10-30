@@ -79,3 +79,5 @@ export class InkPalPlugin extends Plugin {
     await this.persist();
   }
 }
+
+export default InkPalPlugin;

@@ -1,16 +1,15 @@
 {
   "name": "inkpal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ask your notes: vault Q&A with citations + writing assist that completes but never ghost-writes.",
   "main": "main.js",
-  "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke:vault": "node scripts/vault-smoke.ts",
+    "smoke:vault": "node scripts/vault-smoke.mts",
     "release": "bash scripts/release.sh"
   },
   "devDependencies": {
