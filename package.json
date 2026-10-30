@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke:vault": "node scripts/vault-smoke.mts",
+    "providers": "node scripts/fetch-providers.mjs",
     "release": "bash scripts/release.sh"
   },
   "devDependencies": {
