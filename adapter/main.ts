@@ -1,4 +1,4 @@
-import { Plugin, type Editor } from "obsidian";
+import { Plugin, type Editor, type WorkspaceLeaf } from "obsidian";
 import { KeywordRetriever } from "../engine/retrieve.ts";
 import type { LlmConfig } from "../engine/types.ts";
 import type { QaTurn } from "../engine/qa.ts";
@@ -7,6 +7,7 @@ import { openChat } from "./chat-modal.ts";
 import { VaultSections } from "./notes.ts";
 import { runSelfCheck } from "./selfcheck.ts";
 import { DEFAULT_SETTINGS, InkPalSettingTab, type InkPalSettings } from "./settings.ts";
+import { InkPalSideView, VIEW_TYPE_INKPAL_SIDE } from "./side-view.ts";
 
 interface InkPalData {
   settings?: Partial<InkPalSettings>;
@@ -47,6 +48,9 @@ export class InkPalPlugin extends Plugin {
     assist("assist-continue", "写作辅助：续写", "continue");
     assist("assist-translate", "写作辅助：翻译", "translate");
 
+    this.registerView(VIEW_TYPE_INKPAL_SIDE, leaf => new InkPalSideView(leaf, this));
+    this.addRibbonIcon("graduation-cap", "笔伴 · 助教侧栏", () => this.activateSide());
+    this.addCommand({ id: "open-side", name: "打开助教侧栏", callback: () => this.activateSide() });
     this.addSettingTab(new InkPalSettingTab(this));
   }
 
@@ -69,6 +73,19 @@ export class InkPalPlugin extends Plugin {
 
   async persist(): Promise<void> {
     await this.saveData({ settings: this.settings, chat: this.chat });
+  }
+
+  /** 打开（或聚焦）侧边栏助教面板 */
+  async activateSide(): Promise<void> {
+    const { workspace } = this.app;
+    let leaf = workspace.getLeavesOfType(VIEW_TYPE_INKPAL_SIDE)[0];
+    if (!leaf) {
+      const created: WorkspaceLeaf | null = workspace.getRightLeaf(false) ?? workspace.getRightLeaf(true);
+      if (!created) return;
+      leaf = created;
+      await leaf.setViewState({ type: VIEW_TYPE_INKPAL_SIDE, active: true });
+    }
+    workspace.revealLeaf(leaf);
   }
 
   async saveSettings(): Promise<void> {
