@@ -160,3 +160,7 @@
 .inkpal-side-log{flex:1;overflow-y:auto;font-size:12.5px;line-height:1.7;border-top:1px solid var(--background-modifier-border);padding-top:8px;white-space:pre-wrap;word-break:break-word}
 .inkpal-side-item{margin-bottom:6px}
 .inkpal-side-item.err{color:var(--text-error)}
+/* 侧栏输入区 */
+.inkpal-side-ask{display:flex;gap:6px;align-items:flex-end}
+.inkpal-side-input{flex:1;min-height:38px;max-height:120px;resize:vertical;font-size:12.5px;padding:6px 9px;border-radius:8px;border:1px solid var(--background-modifier-border);background:var(--background-primary)}
+.inkpal-side-input:focus{border-color:var(--interactive-accent);outline:none}

@@ -19,6 +19,8 @@ interface NoteMeta {
 
 export class InkPalSideView extends ItemView {
   private logEl!: HTMLElement;
+  private inputEl!: HTMLTextAreaElement;
+  private history: { role: string; content: string }[] = [];
   private busy = false;
 
   constructor(
@@ -56,6 +58,18 @@ export class InkPalSideView extends ItemView {
     this.btn(bar, "查当前笔记", () => this.reviewCurrent());
     this.btn(bar, "查整库", () => this.reviewVault());
     this.btn(bar, "打分", () => this.scoreCurrent());
+
+    const ask = root.createDiv({ cls: "inkpal-side-ask" });
+    this.inputEl = ask.createEl("textarea", { cls: "inkpal-side-input" });
+    this.inputEl.placeholder = "问她当前笔记或整库的问题…（Enter 发送）";
+    this.inputEl.onkeydown = ev => {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        void this.sendChat();
+      }
+    };
+    const sendBtn = ask.createEl("button", { text: "发送", cls: "inkpal-side-btn" });
+    sendBtn.onclick = () => void this.sendChat();
 
     this.logEl = root.createDiv({ cls: "inkpal-side-log" });
     this.say("选好一篇笔记，点上面的按钮。我只读不改——要改的话我会先给清单。");
@@ -156,6 +170,35 @@ export class InkPalSideView extends ItemView {
     for (const a of (res.advice ?? []) as string[]) this.say("→ " + a);
   }
 
+  /** 直接在侧栏问她。带上当前笔记的路径与开头，让她知道"这篇"是哪篇。 */
+  private async sendChat(): Promise<void> {
+    const text = (this.inputEl.value || "").trim();
+    if (!text) return;
+    if (this.busy) return;
+    this.inputEl.value = "";
+    this.say("你：" + text);
+
+    const f = this.app.workspace.getActiveFile();
+    let preface = "";
+    if (f) {
+      const raw = await this.app.vault.cachedRead(f);
+      preface = "【当前笔记：" + f.path + "】\n" + raw.slice(0, 1500) + "\n\n";
+    }
+
+    this.busy = true;
+    try {
+      const messages = [
+        ...this.history.slice(-6),
+        { role: "user", content: preface + text },
+      ];
+      const res = await this.post<{ reply?: string }>("/api/inkpal/chat", { messages });
+      const reply = res.reply || "（没有回复）";
+      this.history.push({ role: "user", content: text }, { role: "assistant", content: reply });
+      this.say("助教：" + reply);
+    } finally {
+      this.busy = false;
+    }
+  }
   /** 统一出口：配了 voyage 就打 voyage，否则直接报错让人去配。 */
   private async post<T extends Record<string, unknown>>(path: string, body: unknown): Promise<T> {
     const url = (this.plugin.settings.voyageUrl || "").trim().replace(/\/+$/, "");

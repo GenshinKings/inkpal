@@ -1,7 +1,7 @@
 {
   "id": "inkpal",
   "name": "InkPal",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.5.0",
   "description": "Ask your notes: vault Q&A with citations, plus writing assist that completes but never ghost-writes.",
   "author": "GenshinKing",
